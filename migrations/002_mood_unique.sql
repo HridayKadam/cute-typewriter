@@ -1,0 +1,1 @@
+create unique index if not exists mood_log_user_day on mood_log(user_id, logged_at);
