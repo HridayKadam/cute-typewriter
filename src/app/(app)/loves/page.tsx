@@ -10,7 +10,7 @@ export default function LovesPage() {
       <h1 className="mb-2 font-script text-4xl text-vintage-brown">things i love</h1>
       <p className="mb-8 font-serif text-vintage-muted">favorite quotes, songs, books, and wandering thoughts</p>
       <CollectionEditor
-        apiPath="/api/things"
+        collection="things"
         emptyCta="collect the little things that make your heart full ♡"
         fields={[
           { key: "category", label: `category (${categories.join(", ")})` },

@@ -10,6 +10,7 @@ import { useTypewriterSound } from "@/hooks/useTypewriterSound";
 import { cn, countWords } from "@/lib/utils";
 import type { JournalEntry, Profile } from "@/lib/types";
 import { motion } from "framer-motion";
+import { deleteEntry, getEntry, toggleEntryFavorite, upsertEntry } from "@/lib/storage";
 
 type Props = {
   initialEntry?: JournalEntry | null;
@@ -47,14 +48,9 @@ export function TypewriterEditor({ initialEntry, profile }: Props) {
         : "font-typewriter";
 
   const persist = useCallback(
-    async (showConfirm = false) => {
+    (showConfirm = false) => {
       setStatus("saving");
-      const res = await fetch(id ? `/api/entries/${id}` : "/api/entries", {
-        method: id ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, title, body, mood }),
-      });
-      const entry = (await res.json()) as JournalEntry;
+      const entry = upsertEntry({ id, title, body, mood });
       if (!id) setId(entry.id);
       setStatus("saved");
       if (showConfirm) {
@@ -70,7 +66,7 @@ export function TypewriterEditor({ initialEntry, profile }: Props) {
   useEffect(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      if (body.trim() || title.trim()) void persist(false);
+      if (body.trim() || title.trim()) persist(false);
     }, 1200);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -79,16 +75,13 @@ export function TypewriterEditor({ initialEntry, profile }: Props) {
 
   useEffect(() => {
     if (!entryId) return;
-    void (async () => {
-      const res = await fetch(`/api/entries/${entryId}`);
-      if (!res.ok) return;
-      const entry = (await res.json()) as JournalEntry;
-      setId(entry.id);
-      setTitle(entry.title);
-      setBody(entry.body);
-      setMood(entry.mood);
-      setFavorite(entry.is_favorite);
-    })();
+    const entry = getEntry(entryId);
+    if (!entry) return;
+    setId(entry.id);
+    setTitle(entry.title);
+    setBody(entry.body);
+    setMood(entry.mood);
+    setFavorite(entry.is_favorite);
   }, [entryId]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -173,17 +166,16 @@ export function TypewriterEditor({ initialEntry, profile }: Props) {
           <button
             type="button"
             className={cn("rounded-full border border-vintage-brown/15 p-2", favorite && "animate-heartbeat text-blush-500")}
-            onClick={async () => {
-              if (!id) await persist(false);
+            onClick={() => {
+              let entryId = id;
+              if (!entryId) {
+                const entry = upsertEntry({ title, body, mood });
+                entryId = entry.id;
+                setId(entry.id);
+              }
               const next = !favorite;
               setFavorite(next);
-              if (id) {
-                await fetch(`/api/entries/${id}`, {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ is_favorite: next }),
-                });
-              }
+              toggleEntryFavorite(entryId, next);
             }}
           >
             <Heart className="h-4 w-4" fill={favorite ? "currentColor" : "none"} />
@@ -192,16 +184,16 @@ export function TypewriterEditor({ initialEntry, profile }: Props) {
             <button
               type="button"
               className="rounded-full border border-vintage-brown/15 p-2 text-red-800/70 hover:bg-red-50"
-              onClick={async () => {
+              onClick={() => {
                 if (!confirm("delete this entry?")) return;
-                await fetch(`/api/entries/${id}`, { method: "DELETE" });
+                deleteEntry(id);
                 router.push("/journal");
               }}
             >
               <Trash2 className="h-4 w-4" />
             </button>
           )}
-          <button type="button" className="btn-vintage text-lg" onClick={() => void persist(true)}>
+          <button type="button" className="btn-vintage text-lg" onClick={() => persist(true)}>
             save ♡
           </button>
         </div>

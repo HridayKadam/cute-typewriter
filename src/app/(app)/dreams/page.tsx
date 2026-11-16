@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { DreamWish } from "@/lib/types";
 import { SaveToast } from "@/components/SaveToast";
+import { listDreams, upsertDream } from "@/lib/storage";
 
 export default function DreamsPage() {
   const [items, setItems] = useState<DreamWish[]>([]);
@@ -10,35 +11,29 @@ export default function DreamsPage() {
   const [description, setDescription] = useState("");
   const [toast, setToast] = useState(false);
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/dreams");
-    setItems(await res.json());
-  }, []);
+  const load = () => setItems(listDreams());
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    load();
+  }, []);
 
-  const save = async () => {
-    await fetch("/api/dreams", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description }),
-    });
+  const save = () => {
+    upsertDream({ title, description });
     setTitle("");
     setDescription("");
     setToast(true);
     window.setTimeout(() => setToast(false), 2000);
-    void load();
+    load();
   };
 
-  const toggle = async (item: DreamWish) => {
-    await fetch("/api/dreams", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: item.id, title: item.title, description: item.description, is_completed: !item.is_completed }),
+  const toggle = (item: DreamWish) => {
+    upsertDream({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      is_completed: !item.is_completed,
     });
-    void load();
+    load();
   };
 
   return (
@@ -60,7 +55,7 @@ export default function DreamsPage() {
           className="w-full rounded-xl border border-vintage-brown/15 bg-ivory/80 p-3 font-typewriter outline-none"
           rows={3}
         />
-        <button type="button" className="btn-vintage" onClick={() => void save()}>
+        <button type="button" className="btn-vintage" onClick={save}>
           add wish ♡
         </button>
       </div>
@@ -70,7 +65,7 @@ export default function DreamsPage() {
           <li key={item.id} className="card-cozy flex items-start gap-3">
             <button
               type="button"
-              onClick={() => void toggle(item)}
+              onClick={() => toggle(item)}
               className={`mt-1 h-5 w-5 shrink-0 rounded border ${item.is_completed ? "border-blush-400 bg-blush-300" : "border-vintage-brown/30"}`}
               aria-label="toggle completed"
             />

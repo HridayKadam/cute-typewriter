@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { SaveToast } from "@/components/SaveToast";
+import { deleteMemory, listMemories, upsertMemory } from "@/lib/storage";
 import type { Memory } from "@/lib/types";
 
 export function MomentsGallery() {
@@ -12,14 +13,11 @@ export function MomentsGallery() {
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/memories");
-    setItems(await res.json());
-  }, []);
+  const load = () => setItems(listMemories());
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    load();
+  }, []);
 
   const onFile = (file: File) => {
     const reader = new FileReader();
@@ -27,18 +25,14 @@ export function MomentsGallery() {
     reader.readAsDataURL(file);
   };
 
-  const save = async () => {
-    await fetch("/api/memories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, caption, photo_url: photoData }),
-    });
+  const save = () => {
+    upsertMemory({ title, caption, photo_url: photoData });
     setTitle("");
     setCaption("");
     setPhotoData(null);
     setToast(true);
     window.setTimeout(() => setToast(false), 2000);
-    void load();
+    load();
   };
 
   return (
@@ -67,7 +61,7 @@ export function MomentsGallery() {
             <Image src={photoData} alt="preview" fill className="object-cover" unoptimized />
           </div>
         )}
-        <button type="button" className="btn-vintage" onClick={() => void save()}>
+        <button type="button" className="btn-vintage" onClick={save}>
           save memory ♡
         </button>
       </div>
@@ -88,14 +82,10 @@ export function MomentsGallery() {
               <div className="p-4">
                 <h3 className="font-serif text-lg text-vintage-ink">{m.title || "untitled moment"}</h3>
                 <p className="mt-1 font-typewriter text-sm text-vintage-muted">{m.caption}</p>
-                <button
-                  type="button"
-                  className="mt-3 text-sm text-red-800/60 hover:underline"
-                  onClick={async () => {
-                    await fetch(`/api/memories?id=${m.id}`, { method: "DELETE" });
-                    void load();
-                  }}
-                >
+                <button type="button" className="mt-3 text-sm text-red-800/60 hover:underline" onClick={() => {
+                    deleteMemory(m.id);
+                    load();
+                  }}>
                   remove
                 </button>
               </div>

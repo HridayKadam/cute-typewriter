@@ -8,7 +8,7 @@ export default function LettersPage() {
       <h1 className="mb-2 font-script text-4xl text-vintage-brown">letters to myself</h1>
       <p className="mb-8 font-serif text-vintage-muted">words for the you who&apos;s still becoming</p>
       <CollectionEditor
-        apiPath="/api/letters"
+        collection="letters"
         emptyCta="write your first letter to future-you ♡"
         fields={[
           { key: "title", label: "letter title" },

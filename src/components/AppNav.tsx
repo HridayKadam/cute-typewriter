@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -19,7 +19,6 @@ const links = [
 
 export function AppNav() {
   const pathname = usePathname();
-  const router = useRouter();
 
   return (
     <header className="sticky top-0 z-40 border-b border-vintage-brown/10 bg-cream/80 backdrop-blur-md">
@@ -41,17 +40,6 @@ export function AppNav() {
             </Link>
           ))}
         </nav>
-        <button
-          type="button"
-          className="text-sm font-serif text-vintage-muted hover:text-vintage-ink"
-          onClick={async () => {
-            await fetch("/api/auth/signout", { method: "POST" });
-            router.push("/auth");
-            router.refresh();
-          }}
-        >
-          sign out
-        </button>
       </div>
     </header>
   );

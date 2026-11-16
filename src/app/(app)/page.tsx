@@ -1,18 +1,27 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatDateLong } from "@/lib/utils";
-import { promptForDate, quoteForDate } from "@/lib/content";
+import { promptForDate, quoteForDate, MOODS } from "@/lib/content";
 import { TypewriterIllustration } from "@/components/TypewriterIllustration";
 import { WritingCalendar } from "@/components/WritingCalendar";
 import { FloralDecor } from "@/components/FloralDecor";
-import { listEntries, listMemories, getProfile } from "@/lib/data";
-import { MOODS } from "@/lib/content";
+import { getProfile, listEntries, listMemories } from "@/lib/storage";
+import type { JournalEntry, Memory } from "@/lib/types";
 
-export default async function HomePage() {
+export default function HomePage() {
   const today = new Date();
-  const profile = await getProfile();
-  const entries = await listEntries(5);
-  const memories = await listMemories();
-  const nickname = profile?.nickname ?? "lovely";
+  const [nickname, setNickname] = useState("lovely");
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [memories, setMemories] = useState<Memory[]>([]);
+
+  useEffect(() => {
+    setNickname(getProfile().nickname);
+    setEntries(listEntries(5));
+    setMemories(listMemories());
+  }, []);
+
   const prompt = promptForDate(today);
   const quote = quoteForDate(today);
 
@@ -59,9 +68,7 @@ export default async function HomePage() {
                       <h3 className="font-serif text-lg">{e.title || "untitled thought"}</h3>
                       <p className="line-clamp-2 font-typewriter text-sm text-vintage-muted">{e.body}</p>
                     </div>
-                    {e.mood && (
-                      <span title={e.mood}>{MOODS.find((m) => m.id === e.mood)?.emoji}</span>
-                    )}
+                    {e.mood && <span title={e.mood}>{MOODS.find((m) => m.id === e.mood)?.emoji}</span>}
                   </Link>
                 </li>
               ))}

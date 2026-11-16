@@ -1,10 +1,15 @@
-import Link from "next/link";
-import { listEntries } from "@/lib/data";
-import { MOODS } from "@/lib/content";
-import { format } from "date-fns";
+"use client";
 
-export default async function JournalPage() {
-  const entries = await listEntries(200);
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { format } from "date-fns";
+import { MOODS } from "@/lib/content";
+import { listEntries } from "@/lib/storage";
+import type { JournalEntry } from "@/lib/types";
+
+export default function JournalPage() {
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  useEffect(() => setEntries(listEntries(200)), []);
 
   return (
     <div>

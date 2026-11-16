@@ -1,8 +1,19 @@
-import Link from "next/link";
-import { listFavorites } from "@/lib/data";
+"use client";
 
-export default async function FavoritesPage() {
-  const { entries, memories } = await listFavorites();
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import type { JournalEntry, Memory } from "@/lib/types";
+import { listFavorites } from "@/lib/storage";
+
+export default function FavoritesPage() {
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [memories, setMemories] = useState<Memory[]>([]);
+
+  useEffect(() => {
+    const { entries: e, memories: m } = listFavorites();
+    setEntries(e);
+    setMemories(m);
+  }, []);
 
   return (
     <div>

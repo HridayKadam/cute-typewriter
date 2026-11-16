@@ -1,15 +1,22 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { WritingCalendar } from "@/components/WritingCalendar";
-import { listMoods } from "@/lib/data";
 import { MOODS } from "@/lib/content";
+import { listMoods } from "@/lib/storage";
 
-export default async function MoodPage() {
-  const now = new Date();
-  const moods = await listMoods(now.getFullYear(), now.getMonth());
+export default function MoodPage() {
+  const [counts, setCounts] = useState<Record<string, number>>({});
 
-  const counts: Record<string, number> = {};
-  for (const m of moods) {
-    counts[m.mood] = (counts[m.mood] ?? 0) + 1;
-  }
+  useEffect(() => {
+    const d = new Date();
+    const moods = listMoods(d.getFullYear(), d.getMonth());
+    const c: Record<string, number> = {};
+    for (const m of moods) c[m.mood] = (c[m.mood] ?? 0) + 1;
+    setCounts(c);
+  }, []);
+
+  const max = Math.max(1, ...Object.values(counts), 1);
 
   return (
     <div>
@@ -25,7 +32,7 @@ export default async function MoodPage() {
               <li key={m.id} className="flex items-center gap-3">
                 <span>{m.emoji}</span>
                 <span className="flex-1 font-serif">{m.label}</span>
-                <MoodBar count={counts[m.id] ?? 0} color={m.color} max={Math.max(1, ...Object.values(counts), 1)} />
+                <MoodBar count={counts[m.id] ?? 0} color={m.color} max={max} />
                 <span className="w-6 text-right text-sm text-vintage-muted">{counts[m.id] ?? 0}</span>
               </li>
             ))}

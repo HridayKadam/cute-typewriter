@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { SaveToast } from "@/components/SaveToast";
+import {
+  deleteCollectionItem,
+  listCollection,
+  saveCollectionItem,
+  type CollectionKey,
+} from "@/lib/storage";
 
 type Field = {
   key: string;
@@ -11,56 +17,38 @@ type Field = {
 };
 
 type Props = {
-  apiPath: string;
+  collection: CollectionKey;
   fields: Field[];
   emptyCta: string;
   renderItem: (item: Record<string, unknown>, onEdit: () => void, onDelete: () => void) => React.ReactNode;
 };
 
-export function CollectionEditor({ apiPath, fields, emptyCta, renderItem }: Props) {
+export function CollectionEditor({ collection, fields, emptyCta, renderItem }: Props) {
   const [items, setItems] = useState<Record<string, unknown>[]>([]);
   const [form, setForm] = useState<Record<string, string>>({});
   const [editId, setEditId] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
 
-  const load = useCallback(async () => {
-    const res = await fetch(apiPath);
-    const data = await res.json();
-    setItems(data);
-  }, [apiPath]);
+  const load = useCallback(() => setItems(listCollection(collection)), [collection]);
 
   useEffect(() => {
-    void load();
+    load();
   }, [load]);
 
-  const save = async () => {
+  const save = () => {
     const payload: Record<string, unknown> = { ...form };
     if (editId) payload.id = editId;
-    const res = await fetch(apiPath, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const saved = await res.json();
-    setItems((prev) => {
-      const idx = prev.findIndex((p) => p.id === saved.id);
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx] = saved;
-        return copy;
-      }
-      return [saved, ...prev];
-    });
+    saveCollectionItem(collection, payload);
+    load();
     setForm({});
     setEditId(null);
     setToast(true);
     window.setTimeout(() => setToast(false), 2000);
-    void load();
   };
 
-  const remove = async (id: string) => {
-    await fetch(`${apiPath}?id=${id}`, { method: "DELETE" });
-    setItems((prev) => prev.filter((p) => p.id !== id));
+  const remove = (id: string) => {
+    deleteCollectionItem(collection, id);
+    load();
   };
 
   return (
@@ -88,7 +76,7 @@ export function CollectionEditor({ apiPath, fields, emptyCta, renderItem }: Prop
             />
           ),
         )}
-        <button type="button" className="btn-vintage" onClick={() => void save()}>
+        <button type="button" className="btn-vintage" onClick={save}>
           {editId ? "update" : "save"} ♡
         </button>
       </div>
@@ -96,12 +84,20 @@ export function CollectionEditor({ apiPath, fields, emptyCta, renderItem }: Prop
       {items.length === 0 ? (
         <p className="text-center font-script text-2xl text-vintage-muted">{emptyCta}</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">{items.map((item) => renderItem(item, () => {
-            setEditId(String(item.id));
-            const next: Record<string, string> = {};
-            for (const f of fields) next[f.key] = String(item[f.key] ?? "");
-            setForm(next);
-          }, () => void remove(String(item.id))))}</div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {items.map((item) =>
+            renderItem(
+              item,
+              () => {
+                setEditId(String(item.id));
+                const next: Record<string, string> = {};
+                for (const f of fields) next[f.key] = String(item[f.key] ?? "");
+                setForm(next);
+              },
+              () => remove(String(item.id)),
+            ),
+          )}
+        </div>
       )}
       <SaveToast show={toast} />
     </div>

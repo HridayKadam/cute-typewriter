@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { MOODS } from "@/lib/content";
 import { cn } from "@/lib/utils";
+import { entryDatesInMonth, listMoods } from "@/lib/storage";
 
 type Props = {
   variant?: "writing" | "mood";
@@ -20,23 +21,16 @@ export function WritingCalendar({ variant = "writing", className }: Props) {
   const firstDow = new Date(year, month, 1).getDay();
 
   useEffect(() => {
-    const load = async () => {
-      if (variant === "writing") {
-        const res = await fetch(`/api/mood?type=writing-days&year=${year}&month=${month}`);
-        const data = await res.json();
-        setWrittenDays(data.days ?? []);
-      } else {
-        const res = await fetch(`/api/mood?year=${year}&month=${month}`);
-        const data = await res.json();
-        const map: Record<number, string> = {};
-        for (const m of data) {
-          const day = new Date(m.logged_at).getDate();
-          map[day] = m.mood;
-        }
-        setMoods(map);
+    if (variant === "writing") {
+      setWrittenDays(entryDatesInMonth(year, month));
+    } else {
+      const map: Record<number, string> = {};
+      for (const m of listMoods(year, month)) {
+        const day = new Date(m.logged_at).getDate();
+        map[day] = m.mood;
       }
-    };
-    void load();
+      setMoods(map);
+    }
   }, [variant, year, month]);
 
   const moodColor = (id: string) => MOODS.find((m) => m.id === id)?.color ?? "#f4c4c8";
@@ -72,9 +66,7 @@ export function WritingCalendar({ variant = "writing", className }: Props) {
               style={variant === "mood" && mood ? { backgroundColor: `${moodColor(mood)}88` } : undefined}
               title={variant === "mood" && mood ? mood : wrote ? "wrote" : undefined}
             >
-              {variant === "mood" && mood
-                ? MOODS.find((m) => m.id === mood)?.emoji ?? day
-                : day}
+              {variant === "mood" && mood ? (MOODS.find((m) => m.id === mood)?.emoji ?? day) : day}
             </div>
           );
         })}
