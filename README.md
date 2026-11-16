@@ -1,18 +1,13 @@
-# dear diary ♡
+# Typewriter
 
-A cozy vintage typewriter journal — **no login, no server database**. Open the app and write.
+One page — opens straight to the machine.
 
-The full experience (typewriter sounds, autosave, moods, collections) persists in **your browser** via localStorage.
-
-## Run
+- Key sounds + carriage return on Enter
+- Draft saved in your browser
+- **Copy** to clipboard (with date)
 
 ```bash
-npm install
-npm run dev
+npm install && npm run dev
 ```
 
-Open http://127.0.0.1:3000
-
-## Stack
-
-Next.js · Tailwind · Framer Motion · Web Audio (typewriter keys)
+http://127.0.0.1:3000

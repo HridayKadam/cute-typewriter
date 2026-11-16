@@ -51,8 +51,8 @@ export function useTypewriterSound(enabled: boolean) {
     osc.frequency.setValueAtTime(180 + Math.random() * 60, t);
     osc.frequency.exponentialRampToValueAtTime(80, t + 0.03);
 
-    gain.gain.setValueAtTime(0.22, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    gain.gain.setValueAtTime(0.28, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
 
     osc.connect(gain);
     noise.connect(filter);
@@ -79,6 +79,38 @@ export function useTypewriterSound(enabled: boolean) {
     }
   }, [enabled]);
 
+  const playReturn = useCallback(() => {
+    if (!enabled) return;
+    const ctx = ctxRef.current ?? new AudioContext();
+    ctxRef.current = ctx;
+    void ctx.resume();
+    const t = ctx.currentTime;
+
+    const thud = ctx.createOscillator();
+    const thudGain = ctx.createGain();
+    thud.type = "triangle";
+    thud.frequency.setValueAtTime(120, t);
+    thud.frequency.exponentialRampToValueAtTime(45, t + 0.08);
+    thudGain.gain.setValueAtTime(0.35, t);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    thud.connect(thudGain);
+    thudGain.connect(ctx.destination);
+    thud.start(t);
+    thud.stop(t + 0.12);
+
+    const clack = ctx.createOscillator();
+    const clackGain = ctx.createGain();
+    clack.type = "square";
+    clack.frequency.setValueAtTime(400, t + 0.02);
+    clack.frequency.exponentialRampToValueAtTime(90, t + 0.06);
+    clackGain.gain.setValueAtTime(0.08, t + 0.02);
+    clackGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    clack.connect(clackGain);
+    clackGain.connect(ctx.destination);
+    clack.start(t + 0.02);
+    clack.stop(t + 0.08);
+  }, [enabled]);
+
   const playDing = useCallback(() => {
     if (!enabled) return;
     const ctx = ctxRef.current ?? new AudioContext();
@@ -97,5 +129,5 @@ export function useTypewriterSound(enabled: boolean) {
     osc.stop(t + 0.15);
   }, [enabled]);
 
-  return { playKey, playDing };
+  return { playKey, playDing, playReturn };
 }

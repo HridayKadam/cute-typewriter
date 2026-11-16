@@ -3,57 +3,48 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
+  html,
+  body {
+    @apply h-full antialiased;
   }
 
   body {
-    @apply bg-cream text-vintage-ink antialiased;
-    background-image: linear-gradient(
-        180deg,
-        rgba(255, 247, 248, 0.9) 0%,
-        rgba(250, 246, 240, 1) 40%,
-        rgba(240, 232, 220, 0.95) 100%
-      ),
-      theme("backgroundImage.grain");
-    min-height: 100vh;
+    background: #141414;
+    color: #e0e0e0;
   }
 
   ::selection {
-    @apply bg-blush-300/60 text-vintage-ink;
+    background: #4a4a4a;
+    color: #f5f2e8;
   }
 }
 
 @layer components {
-  .paper-sheet {
-    @apply relative rounded-sm bg-ivory shadow-paper;
+  .typewriter-paper {
+    background-color: #f4f1e8;
     background-image: linear-gradient(
         to bottom,
-        transparent 39px,
-        rgba(139, 115, 85, 0.12) 39px,
-        rgba(139, 115, 85, 0.12) 40px
+        transparent 27px,
+        rgba(0, 0, 0, 0.06) 27px,
+        rgba(0, 0, 0, 0.06) 28px
       ),
-      theme("backgroundImage.grain");
-    background-size: 100% 40px, auto;
+      radial-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 100% 28px, 4px 4px;
+    box-shadow:
+      inset 0 0 40px rgba(0, 0, 0, 0.04),
+      0 1px 0 rgba(255, 255, 255, 0.15);
+    color: #141414;
   }
 
-  .paper-sheet--rose {
-  @apply bg-[#fff9fa];
+  .control-btn {
+    @apply border border-neutral-600 bg-neutral-800 px-4 py-2 text-xs font-medium uppercase tracking-widest text-neutral-300 transition;
   }
 
-  .paper-sheet--parchment {
-  @apply bg-[#f8f1e4];
+  .control-btn:hover {
+    @apply border-neutral-500 bg-neutral-700 text-neutral-100;
   }
 
-  .btn-vintage {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-vintage-brown/20 bg-blush-100/80 px-6 py-2.5 font-script text-xl text-vintage-brown shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blush-400 hover:bg-blush-200/80 hover:shadow-md active:translate-y-0;
-  }
-
-  .nav-link {
-    @apply font-serif text-sm text-vintage-muted transition-colors hover:text-vintage-ink;
-  }
-
-  .card-cozy {
-    @apply rounded-2xl border border-vintage-brown/10 bg-ivory/80 p-5 shadow-paper backdrop-blur-sm transition hover:border-blush-300/50;
+  .control-btn:active {
+    @apply translate-y-px bg-neutral-900;
   }
 }
